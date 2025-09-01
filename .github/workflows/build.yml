@@ -1,0 +1,84 @@
+name: Deploy Smart Contracts
+run-name: Deploy ${{ github.event.head_commit.message }}
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'test*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'test' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Create .env file
+        run: |
+          echo "USDC_CONTRACT_ADDRESS=${{ vars.USDC_CONTRACT_ADDRESS }}" >> .env
+          echo "RELAYER_WALLET_PRIVATE_KEY=${{ secrets.RELAYER_WALLET_PRIVATE_KEY }}" >> .env
+          echo "FEE_RECIPIENT=${{ vars.FEE_RECIPIENT }}" >> .env
+          echo "FEE_PERCENTAGE=${{ vars.FEE_PERCENTAGE }}" >> .env
+          echo "MIN_FEE=${{ vars.MIN_FEE }}" >> .env
+          echo "NETWORK=${{ vars.NETWORK }}" >> .env
+          echo "CHAIN_ID=${{ vars.CHAIN_ID }}" >> .env
+          echo "NETWORK_RPC_URL=${{ vars.NETWORK_RPC_URL }}" >> .env
+          echo "VERIFIER_API_KEY=${{ secrets.VERIFIER_API_KEY }}" >> .env
+          echo "VERIFIER_URL=${{ vars.VERIFIER_URL }}" >> .env
+
+      - name: Install dependencies
+        run: |
+          forge install OpenZeppelin/openzeppelin-contracts --shallow
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
+      - name: Build contracts
+        run: forge build
+
+      - name: Run tests
+        run: forge test -vvv
+
+      - name: Deploy contracts
+        id: deploy
+        run: |
+          source .env
+          # Deploy with verification
+          forge script script/DeploymentScript.s.sol:DeploymentScript --rpc-url $NETWORK_RPC_URL --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL -vvvv 2>&1 | tee deployment_output.txt
+          
+          # Extract contract address from the output
+          CONTRACT_ADDRESS=$(grep "GasPayerContract deployed at:" deployment_output.txt | awk '{print $4}')
+          
+          # Wait for contracts to be indexed
+          echo "Waiting for contracts to be indexed on chain..."
+          sleep 10
+          
+          # Manually verify contract if automatic verification failed
+          echo "Attempting to verify GasPayerContract..."
+          forge verify-contract \
+            $CONTRACT_ADDRESS \
+            src/GasPayerContract.sol:GasPayerContract \
+            --verifier blockscout \
+            --verifier-url $VERIFIER_URL \
+            --compiler-version 0.8.26 \
+            --num-of-optimizations 200 \
+            --evm-version cancun \
+            --constructor-args $(cast abi-encode "constructor(uint256,uint256,address)" $FEE_PERCENTAGE $MIN_FEE $FEE_RECIPIENT) || echo "Contract verification may have failed or already verified"
+          
+          # Create a summary with important addresses
+          echo "==================================================="
+          echo "🚀 DEPLOYMENT COMPLETE"
+          echo "==================================================="
+          echo "GasPayerContract: $CONTRACT_ADDRESS"
+          echo "Fee Percentage: $FEE_PERCENTAGE basis points ($(echo "scale=2; $FEE_PERCENTAGE / 100" | bc)%)"
+          echo "Minimum Fee: $MIN_FEE wei ($(cast from-wei $MIN_FEE ether) ETH)"
+          echo "Fee Recipient: $FEE_RECIPIENT"
+          echo "==================================================="
+          echo "CONTRACT ADDRESS FOR UI CONFIG: $CONTRACT_ADDRESS"
+          echo "=================================================="
