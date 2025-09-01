@@ -70,7 +70,7 @@ jobs:
           
           # Create a summary with important addresses
           echo "==================================================="
-          echo "🚀 DEPLOYMENT COMPLETE"
+          echo "DEPLOYMENT COMPLETE"
           echo "==================================================="
           echo "GasPayerContract: $CONTRACT_ADDRESS"
           echo "Fee Percentage: $FEE_PERCENTAGE_IN_BP basis points ($(echo "scale=2; $FEE_PERCENTAGE_IN_BP / 100" | bc)%)"

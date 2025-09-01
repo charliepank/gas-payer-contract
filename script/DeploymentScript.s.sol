@@ -25,7 +25,7 @@ contract DeploymentScript is Script {
         GasPayerContract gasPayerContract = new GasPayerContract(feePercentage, minFee, feeRecipient);
         
         console2.log("=================================================");
-        console2.log("🚀 DEPLOYMENT COMPLETE");
+        console2.log("DEPLOYMENT COMPLETE");
         console2.log("=================================================");
         console2.log("GasPayerContract deployed at:", address(gasPayerContract));
         console2.log("Fee Percentage:", gasPayerContract.feePercentage(), "basis points");
