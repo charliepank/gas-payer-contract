@@ -8,15 +8,16 @@ import "../src/GasPayerContract.sol";
 contract DeploymentScript is Script {
     function run() external {
         // Load environment variables
-        uint256 deployerPrivateKey = vm.envUint("RELAYER_WALLET_PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.envUint("DEPLOYMENT_WALLET_PRIVATE_KEY");
         address feeRecipient = vm.envAddress("FEE_RECIPIENT"); // Fee recipient from environment variable
-        uint256 feePercentage = vm.envUint("FEE_PERCENTAGE"); // Fee percentage in basis points
-        uint256 minFee = vm.envUint("MIN_FEE"); // Minimum fee in wei
+        uint256 feePercentage = vm.envUint("FEE_PERCENTAGE_IN_BP"); // Fee percentage in basis points
+        uint256 minFee = vm.envUint("MIN_FEE_WEI"); // Minimum fee in wei
         
         console2.log("Deploying with the following parameters:");
         console2.log("Fee Percentage (basis points):", feePercentage);
         console2.log("Minimum Fee (wei):", minFee);
         console2.log("Fee Recipient:", feeRecipient);
+        console2.log("Deployer:", vm.addr(deployerPrivateKey));
         
         vm.startBroadcast(deployerPrivateKey);
         

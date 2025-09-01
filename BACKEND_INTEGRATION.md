@@ -189,10 +189,12 @@ total to send: 1.01 ETH
 ## Security Considerations
 
 - Keep backend private key secure (use environment variables)
-- Implement rate limiting to prevent abuse
+- The contract has no access restrictions - any address can call it
+- Implement rate limiting in your backend to prevent abuse
 - Monitor for unusual activity
 - Consider implementing a maximum gas amount per transaction
 - Log all transactions for audit purposes
+- Your backend private key is separate from the deployment private key
 
 ## Contact
 For contract deployment address and network-specific details, check the deployment outputs or GitHub Actions logs.

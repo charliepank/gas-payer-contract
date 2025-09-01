@@ -30,10 +30,10 @@ forge install OpenZeppelin/openzeppelin-contracts --shallow
 
 ### Environment Setup
 Copy `.env.example` to `.env` and configure:
-- `RELAYER_WALLET_PRIVATE_KEY`: Private key for deployment
+- `DEPLOYMENT_WALLET_PRIVATE_KEY`: Private key for deployment (only needed for deployment, not runtime usage)
 - `FEE_RECIPIENT`: Address that will receive the fees (immutable after deployment)
-- `FEE_PERCENTAGE`: Fee percentage in basis points (100 = 1%, 250 = 2.5%)
-- `MIN_FEE`: Minimum fee in wei (e.g., 1000000000000000 = 0.001 ETH)
+- `FEE_PERCENTAGE_IN_BP`: Fee percentage in basis points (100 = 1%, 250 = 2.5%)
+- `MIN_FEE_WEI`: Minimum fee in wei (e.g., 1000000000000000 = 0.001 ETH)
 - `NETWORK_RPC_URL`: RPC endpoint for target network
 - `VERIFIER_API_KEY`: API key for contract verification
 - `VERIFIER_URL`: Block explorer API URL for verification
@@ -52,8 +52,8 @@ forge script script/DeploymentScript.s.sol:DeploymentScript --rpc-url $NETWORK_R
   - `fundAndRelay(address signerAddress, uint256 gasAmount)`: Main function for gas payment with fee collection
   - `calculateFee(uint256 gasAmount)`: Returns the fee for a given gas amount (max of percentage or minimum)
 - **Fee Structure**: 
-  - Percentage-based fee (configurable via FEE_PERCENTAGE env var, in basis points)
-  - Minimum fee floor (configurable via MIN_FEE env var, in wei)
+  - Percentage-based fee (configurable via FEE_PERCENTAGE_IN_BP env var, in basis points)
+  - Minimum fee floor (configurable via MIN_FEE_WEI env var, in wei)
   - Fee = max(gasAmount * feePercentage / 10000, minFee)
   - Excess payments refunded to sender
 - **Error Handling**: Custom errors for insufficient payment and transfer failures

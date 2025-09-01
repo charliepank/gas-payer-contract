@@ -22,13 +22,10 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "USDC_CONTRACT_ADDRESS=${{ vars.USDC_CONTRACT_ADDRESS }}" >> .env
-          echo "RELAYER_WALLET_PRIVATE_KEY=${{ secrets.RELAYER_WALLET_PRIVATE_KEY }}" >> .env
+          echo "DEPLOYMENT_WALLET_PRIVATE_KEY=${{ secrets.DEPLOYMENT_WALLET_PRIVATE_KEY }}" >> .env
           echo "FEE_RECIPIENT=${{ vars.FEE_RECIPIENT }}" >> .env
-          echo "FEE_PERCENTAGE=${{ vars.FEE_PERCENTAGE }}" >> .env
-          echo "MIN_FEE=${{ vars.MIN_FEE }}" >> .env
-          echo "NETWORK=${{ vars.NETWORK }}" >> .env
-          echo "CHAIN_ID=${{ vars.CHAIN_ID }}" >> .env
+          echo "FEE_PERCENTAGE_IN_BP=${{ vars.FEE_PERCENTAGE_IN_BP }}" >> .env
+          echo "MIN_FEE_WEI=${{ vars.MIN_FEE_WEI }}" >> .env
           echo "NETWORK_RPC_URL=${{ vars.NETWORK_RPC_URL }}" >> .env
           echo "VERIFIER_API_KEY=${{ secrets.VERIFIER_API_KEY }}" >> .env
           echo "VERIFIER_URL=${{ vars.VERIFIER_URL }}" >> .env
@@ -69,15 +66,15 @@ jobs:
             --compiler-version 0.8.26 \
             --num-of-optimizations 200 \
             --evm-version cancun \
-            --constructor-args $(cast abi-encode "constructor(uint256,uint256,address)" $FEE_PERCENTAGE $MIN_FEE $FEE_RECIPIENT) || echo "Contract verification may have failed or already verified"
+            --constructor-args $(cast abi-encode "constructor(uint256,uint256,address)" $FEE_PERCENTAGE_IN_BP $MIN_FEE_WEI $FEE_RECIPIENT) || echo "Contract verification may have failed or already verified"
           
           # Create a summary with important addresses
           echo "==================================================="
           echo "🚀 DEPLOYMENT COMPLETE"
           echo "==================================================="
           echo "GasPayerContract: $CONTRACT_ADDRESS"
-          echo "Fee Percentage: $FEE_PERCENTAGE basis points ($(echo "scale=2; $FEE_PERCENTAGE / 100" | bc)%)"
-          echo "Minimum Fee: $MIN_FEE wei ($(cast from-wei $MIN_FEE ether) ETH)"
+          echo "Fee Percentage: $FEE_PERCENTAGE_IN_BP basis points ($(echo "scale=2; $FEE_PERCENTAGE_IN_BP / 100" | bc)%)"
+          echo "Minimum Fee: $MIN_FEE_WEI wei ($(cast from-wei $MIN_FEE_WEI ether) ETH)"
           echo "Fee Recipient: $FEE_RECIPIENT"
           echo "==================================================="
           echo "CONTRACT ADDRESS FOR UI CONFIG: $CONTRACT_ADDRESS"
