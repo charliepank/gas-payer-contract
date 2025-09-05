@@ -5,11 +5,12 @@ on:
     tags:
       - 'v*'
       - 'baseDev*'
+      - 'avalancheFuji*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || (startsWith(github.ref, 'refs/tags/baseDev') && 'baseDev' || 'test') }}
+    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || (startsWith(github.ref, 'refs/tags/baseDev') && 'baseDev' || (startsWith(github.ref, 'refs/tags/avalancheFuji') && 'avalancheFuji' || 'test')) }}
     steps:
       - uses: actions/checkout@v4
         with:
