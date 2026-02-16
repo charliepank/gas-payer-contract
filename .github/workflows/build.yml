@@ -48,18 +48,34 @@ jobs:
         id: deploy
         run: |
           source .env
+
           # Deploy with verification
           forge script script/DeploymentScript.s.sol:DeploymentScript --rpc-url $NETWORK_RPC_URL --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL -vvvv 2>&1 | tee deployment_output.txt
-          
-          # Extract contract address from the output
-          CONTRACT_ADDRESS=$(grep "GasPayerContract deployed at:" deployment_output.txt | awk '{print $4}')
-          
+
+          # Extract contract address from the output (look for "CONTRACT ADDRESS FOR UI CONFIG:")
+          CONTRACT_ADDRESS=$(grep "CONTRACT ADDRESS FOR UI CONFIG:" deployment_output.txt | tail -1 | awk '{print $NF}')
+
+          # Validate contract address was captured
+          if [ -z "$CONTRACT_ADDRESS" ]; then
+            echo "ERROR: Failed to extract contract address from deployment output"
+            echo "Trying alternate extraction method..."
+            CONTRACT_ADDRESS=$(grep "GasPayerContract:" deployment_output.txt | head -1 | awk '{print $NF}')
+          fi
+
+          if [ -z "$CONTRACT_ADDRESS" ]; then
+            echo "ERROR: Contract address not found. Deployment may have failed."
+            cat deployment_output.txt
+            exit 1
+          fi
+
+          echo "Extracted contract address: $CONTRACT_ADDRESS"
+
           # Wait for contracts to be indexed
           echo "Waiting for contracts to be indexed on chain..."
           sleep 10
-          
+
           # Manually verify contract if automatic verification failed
-          echo "Attempting to verify GasPayerContract..."
+          echo "Attempting to verify GasPayerContract at $CONTRACT_ADDRESS..."
           forge verify-contract \
             $CONTRACT_ADDRESS \
             src/GasPayerContract.sol:GasPayerContract \
@@ -69,10 +85,10 @@ jobs:
             --num-of-optimizations 200 \
             --evm-version cancun \
             --constructor-args $(cast abi-encode "constructor(uint256,uint256,address)" $FEE_PERCENTAGE_IN_BP $MIN_FEE_WEI $FEE_RECIPIENT) || echo "Contract verification may have failed or already verified"
-          
+
           # Create a summary with important addresses
           echo "==================================================="
-          echo "DEPLOYMENT COMPLETE"
+          echo "DEPLOYMENT SUMMARY"
           echo "==================================================="
           echo "GasPayerContract: $CONTRACT_ADDRESS"
           echo "Fee Percentage: $FEE_PERCENTAGE_IN_BP basis points ($(echo "scale=2; $FEE_PERCENTAGE_IN_BP / 100" | bc)%)"
