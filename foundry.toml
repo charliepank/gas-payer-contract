@@ -8,8 +8,8 @@ optimizer_runs = 200
 via_ir = false
 verbosity = 3
 
-[rpc_endpoints]
-default = "${NETWORK_RPC_URL}"
+# [rpc_endpoints]
+# RPC endpoints are passed via --rpc-url flag instead
 
 # Etherscan config not needed since we pass --etherscan-api-key and --verifier-url directly
 

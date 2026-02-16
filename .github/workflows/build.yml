@@ -49,8 +49,13 @@ jobs:
         run: |
           source .env
 
-          # Deploy without inline verification (causes --fork-url error)
-          forge script script/DeploymentScript.s.sol:DeploymentScript --rpc-url $NETWORK_RPC_URL --broadcast -vvvv 2>&1 | tee deployment_output.txt
+          # Deploy contract
+          echo "Deploying to network: $NETWORK_RPC_URL"
+          forge script script/DeploymentScript.s.sol:DeploymentScript \
+            --rpc-url "$NETWORK_RPC_URL" \
+            --broadcast \
+            --legacy \
+            -vvvv 2>&1 | tee deployment_output.txt
 
           # Extract contract address from the output (look for "CONTRACT ADDRESS FOR UI CONFIG:")
           CONTRACT_ADDRESS=$(grep "CONTRACT ADDRESS FOR UI CONFIG:" deployment_output.txt | tail -1 | awk '{print $NF}')
