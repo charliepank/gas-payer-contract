@@ -23,18 +23,21 @@ contract DeploymentScript is Script {
         
         // Deploy the GasPayerContract
         GasPayerContract gasPayerContract = new GasPayerContract(feePercentage, minFee, feeRecipient);
-        
-        console2.log("=================================================");
+
+        vm.stopBroadcast();
+
+        // Store contract address for verification
+        address contractAddress = address(gasPayerContract);
+
+        console2.log("===================================================");
         console2.log("DEPLOYMENT COMPLETE");
-        console2.log("=================================================");
-        console2.log("GasPayerContract deployed at:", address(gasPayerContract));
+        console2.log("===================================================");
+        console2.log("GasPayerContract:", contractAddress);
         console2.log("Fee Percentage:", gasPayerContract.feePercentage(), "basis points");
         console2.log("Minimum Fee:", gasPayerContract.minFee(), "wei");
         console2.log("Fee Recipient:", gasPayerContract.feeRecipient());
-        console2.log("=================================================");
-        console2.log("CONTRACT ADDRESS FOR UI CONFIG:", address(gasPayerContract));
-        console2.log("=================================================");
-        
-        vm.stopBroadcast();
+        console2.log("===================================================");
+        console2.log("CONTRACT ADDRESS FOR UI CONFIG:", contractAddress);
+        console2.log("===================================================");
     }
 }
