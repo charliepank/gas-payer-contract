@@ -49,8 +49,8 @@ jobs:
         run: |
           source .env
 
-          # Deploy with verification
-          forge script script/DeploymentScript.s.sol:DeploymentScript --rpc-url $NETWORK_RPC_URL --broadcast --verify --verifier blockscout --verifier-url $VERIFIER_URL -vvvv 2>&1 | tee deployment_output.txt
+          # Deploy without inline verification (causes --fork-url error)
+          forge script script/DeploymentScript.s.sol:DeploymentScript --rpc-url $NETWORK_RPC_URL --broadcast -vvvv 2>&1 | tee deployment_output.txt
 
           # Extract contract address from the output (look for "CONTRACT ADDRESS FOR UI CONFIG:")
           CONTRACT_ADDRESS=$(grep "CONTRACT ADDRESS FOR UI CONFIG:" deployment_output.txt | tail -1 | awk '{print $NF}')
@@ -74,16 +74,16 @@ jobs:
           echo "Waiting for contracts to be indexed on chain..."
           sleep 10
 
-          # Manually verify contract if automatic verification failed
+          # Verify contract separately
           echo "Attempting to verify GasPayerContract at $CONTRACT_ADDRESS..."
           forge verify-contract \
             $CONTRACT_ADDRESS \
             src/GasPayerContract.sol:GasPayerContract \
+            --rpc-url $NETWORK_RPC_URL \
             --verifier blockscout \
             --verifier-url $VERIFIER_URL \
             --compiler-version 0.8.26 \
             --num-of-optimizations 200 \
-            --evm-version cancun \
             --constructor-args $(cast abi-encode "constructor(uint256,uint256,address)" $FEE_PERCENTAGE_IN_BP $MIN_FEE_WEI $FEE_RECIPIENT) || echo "Contract verification may have failed or already verified"
 
           # Create a summary with important addresses
